@@ -13,10 +13,30 @@ import flet
 from flet import Page, Text, Row, ElevatedButton,\
     Container, colors, Column, ButtonStyle, Image, Dropdown, dropdown, \
     FilledButton
-from flet.border import BorderSide
-from flet.buttons import RoundedRectangleBorder, CircleBorder
+from flet.buttons import CircleBorder
 from control import set_spt1, set_spt2, set_spt3, set_spt4, set_spt5, \
-    set_relay, all_relay_off
+    set_relay, all_relay_off, i2c_relay
+from datetime import date
+import logging
+import sys
+
+
+today_str = date.today().strftime("%Y-%m-%d")
+log_file = today_str +'.log'
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+formatter = logging.Formatter(fmt="%(asctime)s %(levelname)s: %(message)s",
+                          datefmt="%Y-%m-%d - %H:%M:%S")
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(formatter)
+fh = logging.FileHandler(log_file, "w")
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
+log.addHandler(ch)
+log.addHandler(fh)
+
 
 option_changed = False
 input_sel = -1
@@ -31,8 +51,10 @@ Is_output_selected = False
 all_powr_down = True
 
 
+
 def main(page: Page):
     # all_relay_off()
+
 
     header_img = Image(
         src="imgs/choose_wisely.jpeg",
@@ -83,16 +105,23 @@ def main(page: Page):
             ap_sel = 4
             ap_out_sel = 2
             ap_internal_sel = -1
-            relay_sel = 3
+            if i2c_relay:
+                relay_sel = 1
+            else:
+                relay_sel = 3
         elif "2#" in t2.value:
             ap_sel = 1
             ap_out_sel = 4
             ap_internal_sel = -1
-            relay_sel = 1
+            if i2c_relay:
+                relay_sel = 3
+            else:
+                relay_sel = 1
         elif "3#" in t2.value:
             ap_sel = 3
             ap_out_sel = 1
             ap_internal_sel = 1
+
             relay_sel = 2
         elif "4#" in t2.value:
             ap_sel = 3
@@ -195,7 +224,10 @@ def main(page: Page):
         # active channels
         # input_sel
 
-        # print(input_sel, ap_sel, ap_internal_sel, ap_out_sel, output_sel)
+        log.info(f"input_sel: {input_sel}, ap_sel: {ap_sel} " + \
+              f"ap_internal_sel: {ap_internal_sel} " + \
+              f"ap_out_sel: {ap_internal_sel} " + \
+              f"output_sel: {output_sel}")
 
         set_spt1(input_sel)
 
@@ -272,6 +304,7 @@ def main(page: Page):
              Row([power_up_button, stop_button], alignment="center"),
              status
              )
+
 
 
 flet.app(port=80, target=main, view=flet.WEB_BROWSER,

@@ -9,6 +9,7 @@
 # -*- coding:utf-8 -*-
 import RPi.GPIO as GPIO
 import time
+import smbus
 
 Relay_Ch1 = 26
 Relay_Ch2 = 20
@@ -17,24 +18,30 @@ Relay_Ch3 = 21
 SPT1_Ch1 = 5
 SPT1_Ch2 = 6
 
-SPT2_Ch1 = 2
-SPT2_Ch2 = 3
+SPT2_Ch1 = 23
+SPT2_Ch2 = 24
 
 SPT3_Ch1 = 17
 SPT3_Ch2 = 27
 
-SPT4_Ch1 = 13
-SPT4_Ch2 = 19
+# SPT4_Ch1 = 13
+# SPT4_Ch2 = 19
+
+SPT4_Ch1 = 16
+SPT4_Ch2 = 20
 
 SPT5_Ch1 = 14
 SPT5_Ch2 = 15
 
+i2c_relay = True
+
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
-GPIO.setup(Relay_Ch1,GPIO.OUT)
-GPIO.setup(Relay_Ch2,GPIO.OUT)
-GPIO.setup(Relay_Ch3,GPIO.OUT)
+if not i2c_relay:
+    GPIO.setup(Relay_Ch1, GPIO.OUT)
+    GPIO.setup(Relay_Ch2, GPIO.OUT)
+    GPIO.setup(Relay_Ch3, GPIO.OUT)
 
 print("Setup The Relay Module is [success]")
 
@@ -61,32 +68,51 @@ print("Setup SPT4 Module is [success]")
 GPIO.setup(SPT5_Ch1, GPIO.OUT)
 GPIO.setup(SPT5_Ch2, GPIO.OUT)
 
-print("Setup SPT4 Module is [success]")
+print("Setup SPT5 Module is [success]")
 
 def all_relay_off():
+    if i2c_relay:
+        device_bus = 1
+        device_addr = 0x10
+        bus = smbus.SMBus(device_bus)
+        for i in range(1,5):
+            bus.write_byte_data(device_addr, i, 0x00)
+    else:
         GPIO.output(Relay_Ch1,GPIO.HIGH)
         GPIO.output(Relay_Ch2,GPIO.HIGH)
         GPIO.output(Relay_Ch3,GPIO.HIGH)
 
 def set_relay(num):
-    if num == 1:
-        GPIO.output(Relay_Ch1,GPIO.LOW)
-        print("Channel 1:The Common Contact is access to the Normal Open Contact!")
-        GPIO.output(Relay_Ch2,GPIO.HIGH)
-        GPIO.output(Relay_Ch3,GPIO.HIGH)
-        time.sleep(0.2)
-    elif num == 2:
-        GPIO.output(Relay_Ch2,GPIO.LOW)
-        print("Channel 2:The Common Contact is access to the Normal Open Contact!")
-        GPIO.output(Relay_Ch1,GPIO.HIGH)
-        GPIO.output(Relay_Ch3,GPIO.HIGH)
-        time.sleep(0.2)
-    elif num == 3:
-        GPIO.output(Relay_Ch3,GPIO.LOW)
-        print("Channel 3:The Common Contact is access to the Normal Closed Contact!\n")
-        GPIO.output(Relay_Ch1,GPIO.HIGH)
-        GPIO.output(Relay_Ch2,GPIO.HIGH)
-        time.sleep(0.2)
+    if i2c_relay:
+        device_bus = 1
+        device_addr = 0x10
+        bus = smbus.SMBus(device_bus)
+
+        for i in range(1,5):
+            bus.write_byte_data(device_addr, i, 0x00)
+
+        bus.write_byte_data(device_addr, num, 0xFF)
+
+
+    else:
+        if num == 1:
+            GPIO.output(Relay_Ch1,GPIO.LOW)
+            print("Channel 1:The Common Contact is access to the Normal Open Contact!")
+            GPIO.output(Relay_Ch2,GPIO.HIGH)
+            GPIO.output(Relay_Ch3,GPIO.HIGH)
+            time.sleep(0.2)
+        elif num == 2:
+            GPIO.output(Relay_Ch2,GPIO.LOW)
+            print("Channel 2:The Common Contact is access to the Normal Open Contact!")
+            GPIO.output(Relay_Ch1,GPIO.HIGH)
+            GPIO.output(Relay_Ch3,GPIO.HIGH)
+            time.sleep(0.2)
+        elif num == 3:
+            GPIO.output(Relay_Ch3,GPIO.LOW)
+            print("Channel 3:The Common Contact is access to the Normal Closed Contact!\n")
+            GPIO.output(Relay_Ch1,GPIO.HIGH)
+            GPIO.output(Relay_Ch2,GPIO.HIGH)
+            time.sleep(0.2)
 
 def set_spt1(num):
     """
@@ -203,13 +229,16 @@ def set_spt5(num):
         GPIO.output(ch1, GPIO.HIGH)
         GPIO.output(ch2, GPIO.LOW)
 
-# all_relay_off()
-# set_relay(2)
-# set_spt3(4)
-# set_spt4(1)
 
 if __name__ == "__main__":
-    set_spt1(4)
+    set_spt1(1)
+    set_spt2(1)
+    # set_relay(2)
+
+    # all_relay_off()
+    # set_relay(2)
+    # set_spt3(4)
+    # set_spt4(1)
 
     # for Zhang 80DB
     # set_relay(2)
@@ -225,11 +254,11 @@ if __name__ == "__main__":
 
     # for Guo 80DB myself
 
-    set_relay(3)
-    set_spt2(4)
-    set_spt4(2)
+    # set_relay(3)
+    # set_spt2(4)
+    # set_spt4(2)
 
-    set_spt5(4)
+    # set_spt5(4)
 
     # for Guo 80DB one
 
