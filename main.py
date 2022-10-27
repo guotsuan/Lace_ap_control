@@ -17,6 +17,7 @@ from flet.buttons import CircleBorder
 from control import set_spt1, set_spt2, set_spt3, set_spt4, set_spt5, \
     set_relay, all_relay_off, i2c_relay
 from datetime import date
+from  time_and_gps import get_gps_coord
 import logging
 import sys
 
@@ -55,6 +56,12 @@ all_powr_down = True
 def main(page: Page):
     # all_relay_off()
 
+    try:
+        lat, lon = get_gps_coord()
+    except:
+        log.info("Can not get gps coord")
+        lat = "unkown"
+        lon = "unkown"
 
     header_img = Image(
         src="imgs/choose_wisely.jpeg",
@@ -67,6 +74,7 @@ def main(page: Page):
     page.horizontal_alignment = "center"
     page.vertical_alignment = "center"
 
+    gps = Text(value=u"实验坐标：" + lat + ', ' +lon, size=16)
     page_t = Text(page.title, size=70)
 
     t1 = Text(value="输入：?", size=14)
@@ -299,7 +307,7 @@ def main(page: Page):
         on_click=stop_all
         )
 
-    page.add(page_t, header_img, Row([ap_input, ap_devs, ap_output],
+    page.add(page_t, header_img, gps, Row([ap_input, ap_devs, ap_output],
                                      alignment="center"),
              Row([power_up_button, stop_button], alignment="center"),
              status
