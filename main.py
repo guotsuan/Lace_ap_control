@@ -17,9 +17,10 @@ from flet.buttons import CircleBorder
 from control import set_spt1, set_spt2, set_spt3, set_spt4, set_spt5, \
     set_relay, all_relay_off, i2c_relay
 from datetime import date
-from  time_and_gps import get_gps_coord
+from temp import get_temp
+from  time_and_gps import get_gps_coord, cur_time
 import logging
-import sys
+import sys, time
 
 
 today_str = date.today().strftime("%Y-%m-%d")
@@ -32,7 +33,7 @@ formatter = logging.Formatter(fmt="%(asctime)s %(levelname)s: %(message)s",
 ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.DEBUG)
 ch.setFormatter(formatter)
-fh = logging.FileHandler(log_file, "w")
+fh = logging.FileHandler(log_file, "a")
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 log.addHandler(ch)
@@ -56,8 +57,13 @@ all_powr_down = True
 def main(page: Page):
     # all_relay_off()
 
+    lat =''
+    timenow =cur_time()
+    timef = Text(value=timenow, size=16)
+
     try:
-        lat, lon = get_gps_coord()
+        while len(lat) <=2:
+            lat, lon = get_gps_coord()
     except:
         log.info("Can not get gps coord")
         lat = "unkown"
@@ -69,12 +75,14 @@ def main(page: Page):
         height=260,
         fit="fitWidth"
     )
+    temp = get_temp()
 
     page.title = "低频全天总功率实验控制系统"
     page.horizontal_alignment = "center"
     page.vertical_alignment = "center"
 
-    gps = Text(value=u"实验坐标：" + lat + ', ' +lon, size=16)
+    gps = Text(value=f"实验坐标：{lat} , {lon}", size=16)
+    tempf = Text(value=f"放大器环境温度: {temp:.3f}", size=16)
     page_t = Text(page.title, size=70)
 
     t1 = Text(value="输入：?", size=14)
@@ -307,11 +315,29 @@ def main(page: Page):
         on_click=stop_all
         )
 
-    page.add(page_t, header_img, gps, Row([ap_input, ap_devs, ap_output],
+    page.add(timef, page_t, header_img, Row([gps, tempf],
                                      alignment="center"),
+             Row([ap_input, ap_devs, ap_output], alignment="center"),
              Row([power_up_button, stop_button], alignment="center"),
              status
              )
+
+    temp_cnt = 0
+    while True:
+        timenow =cur_time()
+        timef.value = timenow
+        temp = get_temp()
+        tempf.value = f"放大器环境温度: {temp:.3f}"
+        if temp_cnt == 60:
+            log.info(f"Temp: {temp:.3f}")
+            temp_cnt = 0
+
+        try:
+            page.update()
+        except:
+            pass
+        time.sleep(1)
+        temp_cnt += 1
 
 
 

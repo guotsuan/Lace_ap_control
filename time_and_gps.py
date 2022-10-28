@@ -13,8 +13,12 @@ from io import BytesIO
 import pynmea2
 from pynmea2 import ParseError
 from socket import error as socket_error
+from datetime import date, datetime
 import sys
 
+def cur_time():
+    today_str = datetime.now().strftime("%Y-%m-%d, %H-%M-%S, UTC")
+    return today_str
 
 def get_gps_coord():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -59,3 +63,4 @@ def get_gps_coord():
 
 if __name__ == "__main__":
     print(get_gps_coord())
+    print(cur_time())
