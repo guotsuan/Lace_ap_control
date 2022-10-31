@@ -62,7 +62,7 @@ def main(page: Page):
     timef = Text(value=timenow, size=16)
 
     try:
-        while len(lat) <=2:
+        while len(lat) <=3:
             lat, lon = get_gps_coord()
     except:
         log.info("Can not get gps coord")
